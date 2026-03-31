@@ -1,0 +1,36 @@
+# Binarios
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Archivos de test
+*.test
+*.out
+
+# Variables de entorno (NO commitear)
+.env
+.env.local
+.env.*.local
+
+# Hot reload
+tmp/
+.air.toml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Go
+go.sum
+vendor/
+
+# Dependencias
+node_modules/
