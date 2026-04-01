@@ -5,7 +5,7 @@ import (
 )
 
 func UserRoutes(router *gin.Engine) {
-	users := router.Group("/users")
+	users := router.Group("/user")
 
 	users.GET("", GetAllUsers)
 	users.GET("/:id", GetUserByID)

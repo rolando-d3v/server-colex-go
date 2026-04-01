@@ -1,0 +1,55 @@
+
+@host = http://localhost:4002
+
+### get all users
+GET {{host}}/user HTTP/1.1
+
+### get user by id
+GET {{host}}/user/9cbdcb00-42dc-4011-b0c2-8c81831579d7 HTTP/1.1
+
+### get all events
+GET {{host}}/events/all-events HTTP/1.1
+
+###
+POST {{host}}/events/create-events HTTP/1.1
+content-type: application/json
+
+{
+    "title": "Evento", 
+    "description": "Evento de Prueba 2026",
+    "oficina": "Departamento de TI",
+    "type_event_id": 1,
+    "start": "2026-01-09T17:01:40.000Z",
+    "end": "2026-01-09T17:01:40.000Z",
+    "visibility": "PUBLIC",
+    "name_user_created": "SO1 T/INTG Mamani Flores Rolando Abraham",
+    "user_created_id": "44974829",
+    "group_id": null
+}
+
+
+###
+GET {{host}}/evento/all-eventos-grupo HTTP/1.1
+
+###
+GET {{host}}/tipo_evento/all-tipo-evento HTTP/1.1
+
+###
+POST {{host}}/evento/crear-evento HTTP/1.1
+
+content-type: application/json
+{
+    "title": "Evento", 
+    "description": "Evento de Prueba 2026",
+    "oficina": "Departamento de TI",
+    "user_id": "44974829",
+    "user_created_event": "SO1 T/INTG Mamani Flores Rolando Abraham",
+    "start": "2026-01-08T17:01:40.000Z",
+    "end": "2026-01-08T17:01:40.000Z",
+    "calendar_id": 1
+}
+
+###
+curl -X POST "https://apps.firmaperu.gob.pe/admin/api/security/generate-token" \
+     -H "Content-Type: application/x-www-form-urlencoded" \
+     -d "client_id=e2eXW1rFHDIwMTMxMzY5MTI0YfxGRU-Jbw&client_secret=DzKWwhDRqLdp0Gc6B_9e4R_6E34OiGygFT0"

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"github.com/google/uuid"
 	"time"
 	"github.com/gin-gonic/gin"
 	
@@ -11,12 +12,13 @@ import (
 
 )
 
-// GetAllUsers obtiene todos los usuarios
+//? GetAllUsers obtiene todos los usuarios
+//? ***********************************************************************************************/
 func GetAllUsers(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	rows, err := Query(ctx, "SELECT id, persona_id, colegio_id, email, password FROM usuario")
+	rows, err := Query(ctx, "SELECT id, persona_id, colegio_id, email, is_active, created_at FROM usuario")
 	if err != nil {
 		SendError(c, http.StatusInternalServerError, "Error consultando usuarios")
 		return
@@ -26,7 +28,7 @@ func GetAllUsers(c *gin.Context) {
 	var users []User
 	for rows.Next() {
 		var user User
-		err := rows.Scan(&user.Id, &user.PersonaID, &user.ColegioID, &user.Email, &user.Password)
+		err := rows.Scan(&user.Id, &user.PersonaID, &user.ColegioID, &user.Email, &user.IsActive, &user.CreatedAt)
 		if err != nil {
 			SendError(c, http.StatusInternalServerError, "Error leyendo datos")
 			return
@@ -38,9 +40,12 @@ func GetAllUsers(c *gin.Context) {
 }
 
 // GetUserByID obtiene un usuario por ID
+//? ***********************************************************************************************/
 func GetUserByID(c *gin.Context) {
 	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
+
+	// 🔥 convertir string → UUID
+	id, err := uuid.Parse(idStr)
 	if err != nil {
 		SendError(c, http.StatusBadRequest, "ID inválido")
 		return
@@ -50,8 +55,11 @@ func GetUserByID(c *gin.Context) {
 	defer cancel()
 
 	var user User
-	err = QueryRow(ctx, "SELECT id, persona_id, colegio_id, email, password FROM usuario WHERE id = $1", id).
-		Scan(&user.Id, &user.PersonaID, &user.ColegioID, &user.Email, &user.Password)
+	err = QueryRow(ctx,
+		"SELECT id, persona_id, colegio_id, email, password FROM usuario WHERE id = $1",
+		id,
+	).Scan(&user.Id, &user.PersonaID, &user.ColegioID, &user.Email, &user.Password)
+
 	if err != nil {
 		SendError(c, http.StatusNotFound, "Usuario no encontrado")
 		return
@@ -61,6 +69,7 @@ func GetUserByID(c *gin.Context) {
 }
 
 // CreateUser crea un nuevo usuario
+//? ***********************************************************************************************/
 func CreateUser(c *gin.Context) {
 	var user User
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -71,7 +80,7 @@ func CreateUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var id string
+	var id uuid.UUID
 	err := QueryRow(ctx,
 		"INSERT INTO usuario (persona_id, colegio_id, email, password) VALUES ($1, $2, $3, $4) RETURNING id",
 		user.PersonaID, user.ColegioID, user.Email, user.Password).Scan(&id)
@@ -85,6 +94,7 @@ func CreateUser(c *gin.Context) {
 }
 
 // UpdateUser actualiza un usuario existente
+//? ***********************************************************************************************/
 func UpdateUser(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -119,6 +129,7 @@ func UpdateUser(c *gin.Context) {
 }
 
 // DeleteUser elimina un usuario
+//? ***********************************************************************************************/
 func DeleteUser(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)

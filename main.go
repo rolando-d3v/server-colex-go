@@ -1,14 +1,17 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+
 	. "server-colex-go/config"
+	. "server-colex-go/modules/auth"
 	. "server-colex-go/modules/user"
 )
 
@@ -37,8 +40,19 @@ func main() {
 		c.Next()
 	})
 
+	router.Use(
+		cors.New(cors.Config{
+			AllowOrigins:     []string{"http://localhost:5173"}, // tu frontend
+			AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+			AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "Cookie"},
+			AllowCredentials: true,                             // 🔥 IMPORTANTE
+		}),
+	)
+
+
 	// Rutas
 	UserRoutes(router)
+	AuthRoutes(router)
 
 	port := os.Getenv("PORT")
 	if port == "" {
