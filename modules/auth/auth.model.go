@@ -16,4 +16,9 @@ type Usuariox struct {
 	ColegioID     int       `json:"colegio_id"`
 	Password      string    `json:"-"`
 	IsActive      bool      `json:"is_active"`
+	Roles        []Role    `json:"roles"`
+}
+type Role struct {
+	Id     string `json:"id"`
+	Nombre string `json:"nombre"`
 }

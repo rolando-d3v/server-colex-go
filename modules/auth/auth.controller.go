@@ -2,20 +2,22 @@ package modules
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
-	. "server-colex-go/config"
-
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+
+	// files
+	. "server-colex-go/config"
 )
 
-//? AuthLogin inicia sesión
-//? ***********************************************************************************************/
+// ? AuthLogin inicia sesión
+// ? ***********************************************************************************************/
 func AuthLogin(c *gin.Context) {
 	// 1. Binding y validación automática
 	var body LoginRequest
@@ -30,21 +32,50 @@ func AuthLogin(c *gin.Context) {
 	defer cancel()
 
 	var user Usuariox
-	query := `
-		SELECT id, persona_id, codigo_usuario, colegio_id, password, is_active
-		FROM usuario
-		WHERE codigo_usuario = $1 AND is_active = true
-		LIMIT 1
-	`
-	err := QueryRow(ctx, query, body.Codigo).Scan(&user.Id, &user.PersonaID, &user.CodigoUsuario, &user.ColegioID, &user.Password, &user.IsActive)
+	var rolesJSON []byte
 
-	// log.Printf("User: %+v\n", user)
+	query := `
+		SELECT 
+		u.id,
+		u.persona_id,
+		u.codigo_usuario,
+		u.colegio_id,
+		u.password,
+		u.is_active,
+		json_agg(
+			json_build_object(
+				'id', r.id,
+				'nombre', r.nombre
+			)
+		) AS roles
+	    FROM usuario u
+	    INNER JOIN usuario_rol ur ON ur.usuario_id = u.id
+	    INNER JOIN rol r ON r.id = ur.rol_id
+	    WHERE u.codigo_usuario = $1
+	    AND u.is_active = true
+	    GROUP BY u.id;
+	`
+	err := QueryRow(ctx, query, body.Codigo).Scan(
+		&user.Id,
+		&user.PersonaID,
+		&user.CodigoUsuario,
+		&user.ColegioID,
+		&user.Password,
+		&user.IsActive,
+		&rolesJSON)
 
 	if err != nil {
 		log.Println("Error DB:", err)
 		SendError(c, http.StatusNotFound, "Usuario no encontrado")
 		return
 	}
+
+	// Parsear roles JSON después de obtener los datos del query
+	if err := json.Unmarshal(rolesJSON, &user.Roles); err != nil {
+		log.Println("Error parse roles:", err)
+	}
+
+	log.Printf("User: %+v\n", user)
 
 	// 3. Comparar password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password)); err != nil {
@@ -87,18 +118,14 @@ func AuthLogin(c *gin.Context) {
 		"user": gin.H{
 			"id":             user.Id,
 			"codigo_usuario": user.CodigoUsuario,
-			"colegio_id":         user.ColegioID, // mock temporal
+			"colegio_id":     user.ColegioID, // mock temporal
 		},
-		"roles": []string{"admin_colegio"}, // mock temporal de rol
+		"roles": user.Roles,
 	})
 }
 
-
-
-
-
-//? Verifica la cookie httpOnly y retorna la sesión
-//? ***********************************************************************************************/
+// ? Verifica la cookie httpOnly y retorna la sesión
+// ? ***********************************************************************************************/
 func VerifyAuth(c *gin.Context) {
 	// 1. Obtener la cookie "token"
 	tokenString, err := c.Cookie("token")
@@ -128,7 +155,7 @@ func VerifyAuth(c *gin.Context) {
 			"user": gin.H{
 				"id":             claims["id"],
 				"codigo_usuario": claims["codigo_usuario"],
-				"colegio_id":         claims["colegio_id"],
+				"colegio_id":     claims["colegio_id"],
 			},
 			"roles": []string{"admin_colegio"}, // de nuevo, mock de tu rol esperado
 		})
