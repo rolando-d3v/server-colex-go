@@ -19,6 +19,6 @@ type Usuariox struct {
 	Roles        []Role    `json:"roles"`
 }
 type Role struct {
-	Id     string `json:"id"`
+	Id     int    `json:"id"`
 	Nombre string `json:"nombre"`
 }
