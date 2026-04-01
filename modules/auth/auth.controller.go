@@ -87,7 +87,7 @@ func AuthLogin(c *gin.Context) {
 		"user": gin.H{
 			"id":             user.Id,
 			"codigo_usuario": user.CodigoUsuario,
-			"nombre":         user.CodigoUsuario, // mock temporal
+			"colegio_id":         user.ColegioID, // mock temporal
 		},
 		"roles": []string{"admin_colegio"}, // mock temporal de rol
 	})
@@ -128,7 +128,7 @@ func VerifyAuth(c *gin.Context) {
 			"user": gin.H{
 				"id":             claims["id"],
 				"codigo_usuario": claims["codigo_usuario"],
-				"nombre":         claims["codigo_usuario"],
+				"colegio_id":         claims["colegio_id"],
 			},
 			"roles": []string{"admin_colegio"}, // de nuevo, mock de tu rol esperado
 		})
